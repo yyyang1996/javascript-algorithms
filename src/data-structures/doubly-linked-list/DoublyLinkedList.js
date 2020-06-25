@@ -1,263 +1,176 @@
-import DoublyLinkedListNode from './DoublyLinkedListNode';
+import Node from './DoublyLinkedListNode';
 import Comparator from '../../utils/comparator/Comparator';
 
 export default class DoublyLinkedList {
-  /**
-   * @param {Function} [comparatorFunction]
-   */
   constructor(comparatorFunction) {
-    /** @var DoublyLinkedListNode */
     this.head = null;
-
-    /** @var DoublyLinkedListNode */
     this.tail = null;
-
     this.compare = new Comparator(comparatorFunction);
   }
 
-  /**
-   * @param {*} value
-   * @return {DoublyLinkedList}
-   */
-  prepend(value) {
-    // Make new node to be a head.
-    const newNode = new DoublyLinkedListNode(value, this.head);
-
-    // If there is head, then it won't be head anymore.
-    // Therefore, make its previous reference to be new node (new head).
-    // Then mark the new node as head.
-    if (this.head) {
-      this.head.previous = newNode;
-    }
-    this.head = newNode;
-
-    // If there is no tail yet let's make new node a tail.
-    if (!this.tail) {
-      this.tail = newNode;
-    }
-
-    return this;
-  }
-
-  /**
-   * @param {*} value
-   * @return {DoublyLinkedList}
-   */
   append(value) {
-    const newNode = new DoublyLinkedListNode(value);
-
-    // If there is no head yet let's make new node a head.
+    const node = new Node(value, null, this.tail);
     if (!this.head) {
-      this.head = newNode;
-      this.tail = newNode;
-
-      return this;
+      this.head = node;
+      this.tail = node;
+    } else {
+      this.tail.next = node;
+      this.tail = node;
     }
-
-    // Attach new node to the end of linked list.
-    this.tail.next = newNode;
-
-    // Attach current tail to the new node's previous reference.
-    newNode.previous = this.tail;
-
-    // Set new node to be the tail of linked list.
-    this.tail = newNode;
-
     return this;
   }
 
-  /**
-   * @param {*} value
-   * @return {DoublyLinkedListNode}
-   */
+  prepend(value) {
+    const node = new Node(value, this.head);
+    if (!this.head) {
+      this.head = node;
+      this.tail = node;
+    } else {
+      this.head.previous = node;
+      this.head = node;
+    }
+    return this;
+  }
+
+
+  fromArray(arr) {
+    arr.forEach((val) => {
+      this.append(val);
+    });
+    return this;
+  }
+
   delete(value) {
+    let deleteNode = null;
     if (!this.head) {
-      return null;
+      return deleteNode;
     }
 
-    let deletedNode = null;
-    let currentNode = this.head;
+    while (this.head && this.compare.equal(this.head.value, value)) {
+      deleteNode = this.head;
+      this.head = this.head.next;
+      if (this.head) {
+        this.head.previous = null;
+      }
+    }
 
-    while (currentNode) {
-      if (this.compare.equal(currentNode.value, value)) {
-        deletedNode = currentNode;
+    let current = this.head;
 
-        if (deletedNode === this.head) {
-          // If HEAD is going to be deleted...
-
-          // Set head to second node, which will become new head.
-          this.head = deletedNode.next;
-
-          // Set new head's previous to null.
-          if (this.head) {
-            this.head.previous = null;
-          }
-
-          // If all the nodes in list has same value that is passed as argument
-          // then all nodes will get deleted, therefore tail needs to be updated.
-          if (deletedNode === this.tail) {
-            this.tail = null;
-          }
-        } else if (deletedNode === this.tail) {
-          // If TAIL is going to be deleted...
-
-          // Set tail to second last node, which will become new tail.
-          this.tail = deletedNode.previous;
-          this.tail.next = null;
+    // 1, 1, 2, 3, 3, 3, 4, 5
+    while (current && current.next) {
+      if (this.compare.equal(current.next.value, value)) {
+        deleteNode = current.next;
+        const { next } = deleteNode;
+        current.next = next;
+        if (next) {
+          next.previous = current;
         } else {
-          // If MIDDLE node is going to be deleted...
-          const previousNode = deletedNode.previous;
-          const nextNode = deletedNode.next;
-
-          previousNode.next = nextNode;
-          nextNode.previous = previousNode;
+          this.tail = current;
+          return deleteNode;
         }
+      } else {
+        current = current.next;
       }
-
-      currentNode = currentNode.next;
     }
 
-    return deletedNode;
+    if (current && this.compare.equal(current.value, value)) {
+      deleteNode = current;
+      this.tail = current.previous;
+      if (this.tail) {
+        this.tail.next = null;
+      }
+    }
+
+    return deleteNode;
   }
 
-  /**
-   * @param {Object} findParams
-   * @param {*} findParams.value
-   * @param {function} [findParams.callback]
-   * @return {DoublyLinkedListNode}
-   */
-  find({ value = undefined, callback = undefined }) {
-    if (!this.head) {
-      return null;
-    }
-
-    let currentNode = this.head;
-
-    while (currentNode) {
-      // If callback is specified then try to find node by callback.
-      if (callback && callback(currentNode.value)) {
-        return currentNode;
-      }
-
-      // If value is specified then try to compare by value..
-      if (value !== undefined && this.compare.equal(currentNode.value, value)) {
-        return currentNode;
-      }
-
-      currentNode = currentNode.next;
-    }
-
-    return null;
-  }
-
-  /**
-   * @return {DoublyLinkedListNode}
-   */
   deleteTail() {
     if (!this.tail) {
-      // No tail to delete.
       return null;
     }
 
     if (this.head === this.tail) {
-      // There is only one node in linked list.
-      const deletedTail = this.tail;
+      const deleteNode = this.head;
       this.head = null;
       this.tail = null;
-
-      return deletedTail;
+      return deleteNode;
     }
 
-    // If there are many nodes in linked list...
-    const deletedTail = this.tail;
+    let current = this.head;
 
-    this.tail = this.tail.previous;
-    this.tail.next = null;
+    while (current.next) {
+      current = current.next;
+    }
 
-    return deletedTail;
+    const deleteNode = this.tail;
+    this.tail = current.previous;
+    if (this.tail) {
+      this.tail.next = null;
+    }
+
+    return deleteNode;
   }
 
-  /**
-   * @return {DoublyLinkedListNode}
-   */
   deleteHead() {
     if (!this.head) {
       return null;
     }
 
-    const deletedHead = this.head;
-
-    if (this.head.next) {
-      this.head = this.head.next;
-      this.head.previous = null;
-    } else {
+    if (this.head === this.tail) {
+      const deleteNode = this.head;
       this.head = null;
       this.tail = null;
+      return deleteNode;
     }
 
-    return deletedHead;
-  }
-
-  /**
-   * @return {DoublyLinkedListNode[]}
-   */
-  toArray() {
-    const nodes = [];
-
-    let currentNode = this.head;
-    while (currentNode) {
-      nodes.push(currentNode);
-      currentNode = currentNode.next;
+    const deleteNode = this.head;
+    this.head = this.head.next;
+    if (this.head) {
+      this.head.previous = null;
     }
 
-    return nodes;
+    return deleteNode;
   }
 
-  /**
-   * @param {*[]} values - Array of values that need to be converted to linked list.
-   * @return {DoublyLinkedList}
-   */
-  fromArray(values) {
-    values.forEach(value => this.append(value));
+  find({ value, callback }) {
+    let current = this.head;
 
-    return this;
+    while (current) {
+      if (value && this.compare.equal(current.value, value)) {
+        return current;
+      } if (callback && callback(current.value, value)) {
+        return current;
+      }
+      current = current.next;
+    }
+    return null;
   }
 
-  /**
-   * @param {function} [callback]
-   * @return {string}
-   */
-  toString(callback) {
-    return this.toArray().map(node => node.toString(callback)).toString();
-  }
-
-  /**
-   * Reverse a linked list.
-   * @returns {DoublyLinkedList}
-   */
   reverse() {
-    let currNode = this.head;
-    let prevNode = null;
-    let nextNode = null;
+    let current = this.head;
 
-    while (currNode) {
-      // Store next node.
-      nextNode = currNode.next;
-      prevNode = currNode.previous;
-
-      // Change next node of the current node so it would link to previous node.
-      currNode.next = prevNode;
-      currNode.previous = nextNode;
-
-      // Move prevNode and currNode nodes one step forward.
-      prevNode = currNode;
-      currNode = nextNode;
+    while (current) {
+      const nextNode = current.next;
+      current.next = current.previous;
+      current.previous = nextNode;
+      current = nextNode;
     }
 
-    // Reset head and tail.
+    const saved = this.tail;
     this.tail = this.head;
-    this.head = prevNode;
+    this.head = saved;
 
     return this;
+  }
+
+  toString(callback) {
+    const res = [];
+    let current = this.head;
+    while (current) {
+      res.push(current.toString(callback));
+      current = current.next;
+    }
+
+    return res.join(',');
   }
 }
