@@ -9,7 +9,7 @@ export default class Queue {
    * @return {boolean}
    */
   isEmpty() {
-
+    return !this.linkedList.head;
   }
 
   /**
@@ -17,7 +17,8 @@ export default class Queue {
    * @return {*}
    */
   peek() {
-
+    const node = this.linkedList.head;
+    return node ? node.value : null;
   }
 
   /**
@@ -26,7 +27,7 @@ export default class Queue {
    * @param {*} value
    */
   enqueue(value) {
-
+    return this.linkedList.append(value);
   }
 
   /**
@@ -35,7 +36,8 @@ export default class Queue {
    * @return {*}
    */
   dequeue() {
-
+    const node = this.linkedList.deleteHead();
+    return node ? node.value : null;
   }
 
   /**
@@ -43,6 +45,6 @@ export default class Queue {
    * @return {string}
    */
   toString(callback) {
-
+    return this.linkedList.toString(callback);
   }
 }
